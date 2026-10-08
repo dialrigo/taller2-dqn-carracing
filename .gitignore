@@ -1,0 +1,14 @@
+# Entornos y cachés
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+# Registro local de MLflow (cada quien genera el suyo)
+mlruns/
+mlflow.db
+mlartifacts/
+# Puntos de control intermedios (solo se versiona el modelo final)
+checkpoints/
+# Sistema operativo
+.DS_Store
+Thumbs.db
