@@ -1,0 +1,90 @@
+{
+  "mejor_eps0": {
+    "media": 665.0417535585729,
+    "desv": 171.91150125712744,
+    "mediana": 713.4720051484646,
+    "min": 273.93203883493777,
+    "max": 912.7318725099534,
+    "pct_ge_900": 4.0,
+    "pct_ge_700": 54.0,
+    "avance_pista_medio": 0.7663775413196967,
+    "vueltas_completas_pct": 4.0,
+    "fuera_del_mapa_pct": 0.0,
+    "decisiones_medias": 236.98,
+    "paso": 200000,
+    "epsilon": 0.0,
+    "distribucion_acciones": {
+      "nada": 0.014009621065068782,
+      "girar a la derecha": 0.13688918896109376,
+      "girar a la izquierda": 0.224575913579205,
+      "acelerar": 0.621655835935522,
+      "frenar": 0.0028694404591104736
+    }
+  },
+  "mejor_eps0.05": {
+    "media": 635.021312914194,
+    "desv": 221.8677804070365,
+    "mediana": 675.5214248838299,
+    "min": 61.996587030721415,
+    "max": 899.6506849314896,
+    "pct_ge_900": 0.0,
+    "pct_ge_700": 46.0,
+    "avance_pista_medio": 0.7382711006753165,
+    "vueltas_completas_pct": 2.0,
+    "fuera_del_mapa_pct": 2.0,
+    "decisiones_medias": 236.76,
+    "paso": 200000,
+    "epsilon": 0.05,
+    "distribucion_acciones": {
+      "nada": 0.02331474911302585,
+      "girar a la derecha": 0.12248690657205609,
+      "girar a la izquierda": 0.20662274032775807,
+      "acelerar": 0.6233316438587599,
+      "frenar": 0.024243960128400067
+    }
+  },
+  "final_eps0": {
+    "media": -94.99999999999898,
+    "desv": 3.0519427246232835e-14,
+    "mediana": -94.99999999999898,
+    "min": -94.99999999999905,
+    "max": -94.9999999999989,
+    "pct_ge_900": 0.0,
+    "pct_ge_700": 0.0,
+    "avance_pista_medio": 0.006743787761110621,
+    "vueltas_completas_pct": 0.0,
+    "fuera_del_mapa_pct": 0.0,
+    "decisiones_medias": 238.0,
+    "paso": 250000,
+    "epsilon": 0.0,
+    "distribucion_acciones": {
+      "nada": 0.0,
+      "girar a la derecha": 0.47747899159663865,
+      "girar a la izquierda": 0.5225210084033614,
+      "acelerar": 0.0,
+      "frenar": 0.0
+    }
+  },
+  "final_eps0.05": {
+    "media": -48.838316815229625,
+    "desv": 36.487042959396206,
+    "mediana": -57.296459033342984,
+    "min": -94.99999999999898,
+    "max": 39.9693251533738,
+    "pct_ge_900": 0.0,
+    "pct_ge_700": 0.0,
+    "avance_pista_medio": 0.052905470945881224,
+    "vueltas_completas_pct": 0.0,
+    "fuera_del_mapa_pct": 0.0,
+    "decisiones_medias": 238.0,
+    "paso": 250000,
+    "epsilon": 0.05,
+    "distribucion_acciones": {
+      "nada": 0.013697478991596639,
+      "girar a la derecha": 0.48831932773109243,
+      "girar a la izquierda": 0.4784033613445378,
+      "acelerar": 0.011008403361344538,
+      "frenar": 0.008571428571428572
+    }
+  }
+}

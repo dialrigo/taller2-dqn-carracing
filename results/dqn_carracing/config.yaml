@@ -1,0 +1,32 @@
+ambiente:
+  id: CarRacing-v3
+  continuo: false
+  frame_skip: 4
+  frame_stack: 4
+  tamano: 84
+  pasos_zoom_inicial: 50
+  paciencia_sin_progreso: 100
+entrenamiento:
+  pasos_totales: 250000
+  gamma: 0.99
+  lr: 0.0001
+  batch: 32
+  memoria: 80000
+  inicio_aprendizaje: 10000
+  frecuencia_entrenamiento: 4
+  sincronizar_objetivo: 2500
+  epsilon_inicial: 1.0
+  epsilon_final: 0.05
+  pasos_decaimiento_epsilon: 100000
+  double_dqn: true
+  recorte_gradiente: 10.0
+  evaluar_cada: 25000
+  episodios_evaluacion: 5
+  guardar_cada: 5000
+  semilla: 42
+evaluacion:
+  episodios: 50
+  semilla_base: 1000
+mlflow:
+  experimento: taller2-dqn-carracing
+  uri: mlflow.db

@@ -1,0 +1,36 @@
+# Configuración única del experimento. Cada valor está justificado en el README (sección 5).
+ambiente:
+  id: CarRacing-v3
+  continuo: false          # 5 acciones discretas: requisito de DQN
+  frame_skip: 4            # repetir cada acción 4 cuadros
+  frame_stack: 4           # apilar los 4 últimos cuadros procesados
+  tamano: 84               # cuadro en escala de grises de 84x84
+  pasos_zoom_inicial: 50   # cuadros iniciales de zoom de cámara que se descartan
+  paciencia_sin_progreso: 100   # (solo entrenamiento) corta el episodio tras 100 decisiones sin recompensa positiva
+
+entrenamiento:
+  pasos_totales: 250000    # decisiones del agente (= 1 000 000 de cuadros con frame_skip 4)
+  gamma: 0.99
+  lr: 0.0001
+  batch: 32
+  memoria: 80000
+  inicio_aprendizaje: 10000
+  frecuencia_entrenamiento: 4
+  sincronizar_objetivo: 2500
+  epsilon_inicial: 1.0
+  epsilon_final: 0.05
+  pasos_decaimiento_epsilon: 100000
+  double_dqn: true
+  recorte_gradiente: 10.0
+  evaluar_cada: 25000
+  episodios_evaluacion: 5
+  guardar_cada: 5000      # punto de control para reanudar si el proceso se interrumpe
+  semilla: 42
+
+evaluacion:
+  episodios: 50
+  semilla_base: 1000
+
+mlflow:
+  experimento: taller2-dqn-carracing
+  uri: mlflow.db           # base SQLite local (no se versiona)
