@@ -46,7 +46,11 @@ print("Forma de un estado:", np.asarray(o).shape, np.asarray(o).dtype)
 
 fig, ax = plt.subplots(1, 5, figsize=(15, 3.3))
 crudo.reset(seed=0)
-for _ in range(ca["pasos_zoom_inicial"] + 24):
+# Mismo instante que el cuadro t-0: el wrapper salta el zoom con la acción «nada» y luego
+# se aplicaron 6 decisiones de «acelerar» con frame skip (6 x frame_skip cuadros).
+for _ in range(ca["pasos_zoom_inicial"]):
+    crudo.step(0)
+for _ in range(6 * ca["frame_skip"]):
     rgb, *_ = crudo.step(3)
 ax[0].imshow(rgb); ax[0].set_title("Original 96x96x3 (RGB)", fontsize=9)
 ax[0].axhline(84, color="yellow", lw=1, ls="--"); ax[0].text(2, 94, "tablero recortado", color="yellow", fontsize=7)
