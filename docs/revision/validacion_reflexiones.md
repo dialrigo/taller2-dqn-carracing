@@ -4,9 +4,9 @@ Registro de la revisión de las secciones 7 y 8 del README y del control de cali
 
 ## Qué revisé
 - Cada afirmación cuantitativa de §7 contra los modelos entregados (`models/`) y los archivos de `results/`.
-- Las bitácoras de dificultades de los *pull requests* #1 a #4 y los registros `docs/validacion_ambiente.md` y `docs/validacion_red.md`, para reescribir §8.
+- Las bitácoras de dificultades de los *pull requests* #1 a #4 y los registros `validacion_ambiente.md` y `validacion_red.md` de esta carpeta, para reescribir §8.
 - El README completo, buscando contradicciones entre secciones.
-- Las tablas de integrantes de `README.md`, `GUIA_EQUIPO.md` y `CHECKLIST_REVISION.md`.
+- Las tablas de integrantes del README y de los documentos internos de coordinación del equipo (retirados del repositorio en la auditoría final).
 
 ## Salida de `uv run python scripts/diagnostico_colapso.py`
 ```
@@ -43,7 +43,7 @@ Se eliminó la nota de plantilla y se reescribió con las dificultades reales de
 ## Control de calidad
 - §5.2 decía que el presupuesto era *la* razón de no llegar a 900, mientras §7 da tres factores; se matizó a «una de las razones».
 - Resumen inicial del README actualizado con el hallazgo del colapso.
-- Tablas de integrantes completas en los tres archivos (en `GUIA_EQUIPO.md` falta el usuario de GitHub de los Roles 6 y 7).
+- Tablas de integrantes completas.
 - Nuevo script `scripts/diagnostico_colapso.py` agregado a la sección 1 y al árbol del repositorio.
 - Cifras verificadas sin cambios: ε ≈ 0,905 al terminar el llenado; 35 280 bytes por transición y ≈ 2,8 GB; ≈ 338 episodios en memoria; horizonte de 400 cuadros ≈ 8 s; 40 % del entrenamiento en exploración.
 

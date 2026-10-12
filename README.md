@@ -7,17 +7,17 @@
 > **Resultado en una línea:** un DQN (Double DQN + red convolucional de Mnih et al., 2015) entrenado desde cero con 1 M de cuadros en CPU conduce en **CarRacing-v3 (acciones discretas)** con un retorno de **665 ± 172 en 50 pistas nuevas** (agente aleatorio: −46), recorre el **77 %** de la pista sin salirse nunca del mapa y supera 700 puntos en el 54 % de las pistas. No alcanza el umbral de 900 porque no completa la vuelta en los 1000 cuadros disponibles; además, el modelo final colapsó (queda inmóvil y, aun forzando el arranque, conduce mucho peor), por lo que se entrega el mejor punto de control.
 
 
-**Integrantes y roles** (detalle en [`GUIA_EQUIPO.md`](GUIA_EQUIPO.md)):
+**Integrantes y roles.** Cada integrante revisó la parte del trabajo a su cargo contra el código y los datos. Su revisión quedó registrada en un *pull request* y, cuando aplica, en [`docs/revision/`](docs/revision/).
 
-| Rol | Integrante |
-|---|---|
-| 1 · Integración del repositorio | Diego Ríos |
-| 2 · Red neuronal e hiperparámetros | Nataly Valbuena |
-| 3 · Ambiente: acciones, observaciones y recompensas | Lorena Valero |
-| 4 · Flujo de entrenamiento y particularidades | Nicolas Gamboa |
-| 5 · Experimentos y reproducibilidad | Jorge Anaya |
-| 6 · Resultados | Andrés Gonzalo Díaz Lázaro |
-| 7 · Reflexiones y control de calidad | Andrés Gonzalo Díaz Lázaro |
+| Rol | Integrante | Revisión | Registro |
+|---|---|---|---|
+| 1 · Integración del repositorio | Diego Ríos | integró los PR [#1](https://github.com/dialrigo/taller2-dqn-carracing/pull/1)–[#6](https://github.com/dialrigo/taller2-dqn-carracing/pull/6) | — |
+| 2 · Red neuronal e hiperparámetros (§5) | Nataly Valbuena | [PR #2](https://github.com/dialrigo/taller2-dqn-carracing/pull/2) | [`validacion_red.md`](docs/revision/validacion_red.md) |
+| 3 · Ambiente: acciones, observaciones y recompensas (§2) | Lorena Valero | [PR #1](https://github.com/dialrigo/taller2-dqn-carracing/pull/1) | [`validacion_ambiente.md`](docs/revision/validacion_ambiente.md) |
+| 4 · Flujo de entrenamiento y particularidades (§3–4) | Nicolas Gamboa | [PR #3](https://github.com/dialrigo/taller2-dqn-carracing/pull/3) | en el PR |
+| 5 · Experimentos y reproducibilidad (§1) | Jorge Anaya | [PR #4](https://github.com/dialrigo/taller2-dqn-carracing/pull/4) | en el PR |
+| 6 · Resultados (§6) | Andrés Gonzalo Díaz Lázaro | [PR #5](https://github.com/dialrigo/taller2-dqn-carracing/pull/5) | [`validacion_resultados.md`](docs/revision/validacion_resultados.md) |
+| 7 · Reflexiones y control de calidad (§7–8) | Andrés Gonzalo Díaz Lázaro | [PR #6](https://github.com/dialrigo/taller2-dqn-carracing/pull/6) | [`validacion_reflexiones.md`](docs/revision/validacion_reflexiones.md) |
 
 ---
 
@@ -164,7 +164,7 @@ para paso = 1 … 250 000 decisiones:
 guardar el modelo final (además del mejor modelo según la evaluación periódica)
 ```
 
-Cada línea del pseudocódigo se verificó contra el código; la correspondencia con números de línea está en el *pull request* del Rol 4. Dos detalles que el pseudocódigo no hace evidentes: ε empieza a bajar desde la primera decisión, así que cuando termina el llenado de la memoria ya vale ≈ 0,90; y la memoria guarda de *s'* solo el cuadro nuevo (los otros 3 ya están en *s*), así cada transición ocupa 5 cuadros en vez de 8 (≈ 37 % menos espacio).
+Cada línea del pseudocódigo se verificó contra el código; la correspondencia con números de línea está en el [*pull request* del Rol 4](https://github.com/dialrigo/taller2-dqn-carracing/pull/3). Dos detalles que el pseudocódigo no hace evidentes: ε empieza a bajar desde la primera decisión, así que cuando termina el llenado de la memoria ya vale ≈ 0,90; y la memoria guarda de *s'* solo el cuadro nuevo (los otros 3 ya están en *s*), así cada transición ocupa 5 cuadros en vez de 8 (≈ 37 % menos espacio).
 
 **Función de cada componente de DQN:**
 
@@ -241,7 +241,7 @@ Dimensión de salida de cada convolución: ⌊(entrada − kernel)/stride⌋ + 1
 | Corte sin progreso | 100 decisiones | — | Ahorra cómputo en episodios estancados (solo entrenamiento). |
 | Semilla | 42 | — | Reproducibilidad. |
 
-> **Verificación (Rol 2):** la tabla de capas de §5.1 coincide con `scripts/resumen_red.py` (1 686 693 parámetros) y las dimensiones se comprobaron a mano. El detalle está en `docs/validacion_red.md`.
+> **Verificación (Rol 2):** la tabla de capas de §5.1 coincide con `scripts/resumen_red.py` (1 686 693 parámetros) y las dimensiones se comprobaron a mano. El detalle está en [`docs/revision/validacion_red.md`](docs/revision/validacion_red.md).
 
 ---
 
@@ -306,7 +306,7 @@ En un episodio completo (pista 1000, retorno 816) el agente acelera en rectas, a
 1. Con un DQN implementado desde cero y 1 M de cuadros en CPU, el agente aprende a conducir desde píxeles: de −46 (aleatorio) a **665 ± 172** en pistas nuevas, recorriendo tres cuartas partes de la pista sin salirse.
 2. El desempeño queda por debajo del umbral de 900 **principalmente por velocidad**: ningún episodio greedy termina fuera del mapa y 48 de 50 se agotan por tiempo. Las salidas del borde de la pista que sí ocurren (sección 6.3) cuestan tiempo, pero no terminan el episodio.
 3. El entrenamiento es **inestable**: dos de las diez evaluaciones periódicas (decisiones 175 000 y 250 000) encontraron al agente inmóvil. Guardar el mejor punto de control fue indispensable: el modelo final no sirve.
-4. **El resultado no es reproducible bit a bit entre máquinas.** La corrida corta (3 000 decisiones) da exactamente las mismas cifras en dos clones con la semilla 42, pero la reproducción completa del Rol 5 en otro equipo (Windows), con la misma configuración y semilla, obtuvo su mejor punto de control en la decisión 125 000 con **554 ± 210** en las 50 pistas de evaluación, frente a 665 ± 172 de la corrida reportada (detalle en el *pull request* #4). Ambas corridas aprenden a conducir y ninguna resuelve el ambiente, pero la diferencia de ≈ 110 puntos muestra que la cifra de 665 es una realización y no un valor esperado; con dos corridas no se puede estimar la variabilidad con rigor.
+4. **El resultado no es reproducible bit a bit entre máquinas.** La corrida corta (3 000 decisiones) da exactamente las mismas cifras en dos clones con la semilla 42, pero la reproducción completa del Rol 5 en otro equipo (Windows), con la misma configuración y semilla, obtuvo su mejor punto de control en la decisión 125 000 con **554 ± 210** en las 50 pistas de evaluación, frente a 665 ± 172 de la corrida reportada (detalle en el [*pull request* #4](https://github.com/dialrigo/taller2-dqn-carracing/pull/4)). Ambas corridas aprenden a conducir y ninguna resuelve el ambiente, pero la diferencia de ≈ 110 puntos muestra que la cifra de 665 es una realización y no un valor esperado; con dos corridas no se puede estimar la variabilidad con rigor.
 
 ---
 
@@ -342,7 +342,7 @@ Esto conecta con el diseño del problema:
 
 ## 8. Reflexión sobre lo que más costó
 
-Esta sección reúne las dificultades que registró cada integrante en la «Bitácora de dificultades» de su *pull request* (#1 a #4 y los de los Roles 6 y 7) y las que aparecieron al construir y entrenar el agente.
+Esta sección reúne las dificultades que registró cada integrante en la «Bitácora de dificultades» de su *pull request* ([#1](https://github.com/dialrigo/taller2-dqn-carracing/pull/1) a [#6](https://github.com/dialrigo/taller2-dqn-carracing/pull/6)) y las que aparecieron al construir y entrenar el agente.
 
 **Técnicas**
 
@@ -375,4 +375,4 @@ Si hubiera que resumir en una frase: entrenar el agente fue caro, pero lo que m�
 - Farama Foundation. *Gymnasium — Car Racing*. https://gymnasium.farama.org/environments/box2d/car_racing/
 - PyTorch. *Reinforcement Learning (DQN) Tutorial*. https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
 
-**Uso de IA generativa:** el código base y el borrador de este documento se construyeron con apoyo de un asistente de IA (Claude, Anthropic). Las cifras provienen de la ejecución real del código de este repositorio. Cada integrante verificó la sección de su rol según `CHECKLIST_REVISION.md` y registró su revisión en un *pull request*.
+**Uso de IA generativa:** el código base y el borrador de este documento se construyeron con apoyo de un asistente de IA (Claude, Anthropic). Las cifras provienen de la ejecución real del código de este repositorio. Cada integrante verificó la sección de su rol contra el código y los datos y registró su revisión en un *pull request* (ver la tabla de integrantes).
