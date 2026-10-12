@@ -35,7 +35,7 @@ Cada rol responde por un criterio de la rúbrica del Taller 2. Marca cada punto 
 - [ ] Revisar `docs/figuras/preprocesamiento.png` y validar que el recorte quita solo el tablero inferior.
 - [ ] Revisar que la justificación de apilar 4 cuadros (propiedad de Markov) esté clara en la sección 2.
 
-## Rol 4 · Flujo de entrenamiento y particularidades — Integrante 4
+## Rol 4 · Flujo de entrenamiento y particularidades — Nicolas Gamboa
 - [ ] **Dibujar a mano** (papel o tableta) el ciclo DQN: ambiente → ε-greedy → memoria de experiencia → minilote → objetivo de Bellman con red objetivo → actualización → sincronización. Guardarlo como `docs/figuras/diagrama_dqn_propio.png` y enlazarlo en la sección 3 del README. En el Taller 1 el profesor pidió esquemas propios, no generados por IA.
 - [ ] Recorrer `src/carracing_dqn/train.py` y verificar que cada paso del pseudocódigo del README existe en el código (anotar número de línea en el PR).
 - [ ] Revisar la tabla de particularidades (sección 4): ¿falta alguna? (por ejemplo, la penalización de −0,1 por cuadro, o que las baldosas solo pagan la primera vez).

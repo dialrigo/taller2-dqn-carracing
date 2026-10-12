@@ -14,7 +14,7 @@
 | 1 · Integración del repositorio | Diego Ríos |
 | 2 · Red neuronal e hiperparámetros | Nataly Valbuena |
 | 3 · Ambiente: acciones, observaciones y recompensas | Lorena Valero |
-| 4 · Flujo de entrenamiento y particularidades | _por asignar_ |
+| 4 · Flujo de entrenamiento y particularidades | Nicolas Gamboa |
 | 5 · Experimentos y reproducibilidad | _por asignar_ |
 | 6 · Resultados | _por asignar_ |
 | 7 · Reflexiones y control de calidad | _por asignar_ |
@@ -140,22 +140,7 @@ No se puede acelerar y girar en la misma acción: el agente debe alternar decisi
 
 ## 3. Flujo lógico del entrenamiento
 
-```mermaid
-flowchart LR
-    E["CarRacing-v3<br/>imagen 96×96×3"] --> PRE["Preprocesamiento<br/>zoom · frame skip 4 · recorte<br/>gris · 84×84 · apilar 4"]
-    PRE -- "estado s (4×84×84)" --> POL{"ε-greedy<br/>ε: 1,0 → 0,05"}
-    POL -- "prob. ε: acción al azar" --> A["acción a ∈ {0..4}"]
-    POL -- "prob. 1−ε: argmax Q(s,·)" --> A
-    QN["Red Q en línea θ<br/>(CNN)"] -.-> POL
-    A --> E
-    PRE -- "(s, a, r, s', terminated)" --> M[("Memoria de experiencia<br/>80 000 transiciones")]
-    M -- "minilote de 32<br/>cada 4 decisiones" --> B["Objetivo de Bellman (Double DQN)<br/>y = r + γ·(1−terminated)·Q_θ⁻(s', argmax_a' Q_θ(s',a'))"]
-    T["Red objetivo θ⁻"] -.-> B
-    B -- "pérdida de Huber · Adam<br/>recorte de gradiente" --> QN
-    QN -- "copia θ → θ⁻<br/>cada 2 500 decisiones" --> T
-```
-
-> El Rol 4 reemplaza o complementa este diagrama con un esquema propio dibujado a mano (`docs/figuras/diagrama_dqn_propio.png`).
+![Flujo lógico del entrenamiento](docs/figuras/diagrama_dqn_propio.png)
 
 **Pseudocódigo** (implementado en `src/carracing_dqn/train.py` y `agent.py`):
 
@@ -172,15 +157,19 @@ para paso = 1 … 250 000 decisiones:
         y  ← r + 0,99 · (1 − terminated) · Q_θ⁻(s', a*)             # la red objetivo evalúa
         minimizar Huber(Q_θ(s, a), y) con Adam;  ‖∇‖ ≤ 10
     cada 2 500 decisiones:  θ⁻ ← θ
-    cada 25 000 decisiones: evaluar la política greedy en 5 pistas fijas y guardar el mejor modelo
+    cada 25 000 decisiones (y en la última): evaluar la política greedy en 5 pistas fijas y guardar el mejor modelo
     cada 5 000 decisiones:  punto de control (red, optimizador y memoria en disco) para reanudar
+    si terminated o truncated: registrar el episodio en MLflow y reiniciar el ambiente (nueva pista)
+guardar el modelo final (además del mejor modelo según la evaluación periódica)
 ```
+
+Cada línea del pseudocódigo se verificó contra el código; la correspondencia con números de línea está en el *pull request* del Rol 4. Dos detalles que el pseudocódigo no hace evidentes: ε empieza a bajar desde la primera decisión, así que cuando termina el llenado de la memoria ya vale ≈ 0,90; y la memoria guarda de *s'* solo el cuadro nuevo (los otros 3 ya están en *s*), así cada transición ocupa 5 cuadros en vez de 8 (≈ 37 % menos espacio).
 
 **Función de cada componente de DQN:**
 
-- **Memoria de experiencia.** Los cuadros consecutivos de una vuelta están muy correlacionados; entrenar con ellos en orden violaría el supuesto de datos independientes del descenso de gradiente y haría que la red olvidara las curvas vistas hace un minuto. Muestrear al azar de 80 000 transiciones rompe esa correlación y reutiliza cada experiencia unas 2 veces.
+- **Memoria de experiencia.** Los cuadros consecutivos de una vuelta están muy correlacionados; entrenar con ellos en orden violaría el supuesto de datos independientes del descenso de gradiente y haría que la red olvidara las curvas vistas hace un minuto. Muestrear al azar de 80 000 transiciones rompe esa correlación y reutiliza cada experiencia: se toman 32 muestras por cada 4 decisiones nuevas, así que cada transición se usa en promedio unas 8 veces mientras está en la memoria.
 - **ε-greedy.** Al inicio el agente no sabe que acelerar sobre la pista paga; la exploración aleatoria genera esas primeras experiencias. ε baja de 1 a 0,05 en 100 000 decisiones y se mantiene en 0,05 para seguir corrigiendo errores.
-- **Red objetivo.** Si el objetivo *y* se calculara con la misma red que se actualiza, cada paso de gradiente moverían también el objetivo y el valor Q oscilaría. La copia congelada se actualiza cada 2 500 decisiones (625 pasos de gradiente).
+- **Red objetivo.** Si el objetivo *y* se calculara con la misma red que se actualiza, cada paso de gradiente movería también el objetivo y el valor Q oscilaría. La copia congelada se actualiza cada 2 500 decisiones (625 pasos de gradiente).
 - **Actualización de Bellman con Double DQN.** Q(s, a) se ajusta hacia r + γ·Q(s′, a*). En Double DQN la red en línea elige a* y la red objetivo lo evalúa, lo que reduce la sobreestimación del operador máximo (van Hasselt et al., 2016).
 
 ---
@@ -194,6 +183,10 @@ para paso = 1 … 250 000 decisiones:
 | **Pista distinta en cada episodio** | No se puede memorizar un recorrido: hay que generalizar a curvas nuevas. | Evaluación en 50 pistas que nunca se usaron en el entrenamiento. |
 | **Zoom de cámara al inicio** | Los primeros ~50 cuadros son una transición visual sin control. | Se saltan al reiniciar. |
 | **Recompensa por baldosa nueva, una sola vez** | Volver por la pista ya recorrida no paga; quedarse quieto cuesta −0,1 por cuadro. | Corte del episodio de entrenamiento tras 100 decisiones sin recompensa positiva: evita llenar la memoria con el auto detenido o girando en el pasto. |
+| **Salir del área de juego cuesta −100 y termina el episodio** | Es la única recompensa grande y negativa: produce objetivos de Bellman mucho mayores (en magnitud) que el resto y, si se repite, el agente aprende a evitar los bordes del mapa. | Se marca como `terminated` (fin real: no hay futuro que estimar) y la pérdida de Huber limita el gradiente de esos errores grandes. |
+| **Escala de recompensa variable y sin recortar** | Cada baldosa paga 1000/N y N cambia con la pista (≈ 3 puntos); con *frame skip* una decisión sin avance suma −0,4. A diferencia de Atari, no se recortan las recompensas a [−1, 1]. | Se conserva la escala original para que el retorno sea comparable con el umbral de 900; Huber y el recorte de gradiente (‖∇‖ ≤ 10) mantienen estable el entrenamiento. |
+| **Menos agarre fuera de la pista** | Sobre el pasto la fricción baja al 60 %: el auto derrapa y el efecto de una acción depende de dónde estén las ruedas. | No se modela explícitamente; los 4 cuadros apilados permiten inferir el derrape y el corte sin progreso descarta los episodios atascados en el pasto. |
+| **Vuelta completa: fin real del episodio** | El episodio termina al visitar todas las baldosas o al volver a la salida tras recorrer más del 95 % (`lap_complete_percent = 0.95`). | Se marca como `terminated`; en la evaluación se cuenta como «vuelta completa» (`utils.py`, `tipo_fin`). |
 | **El corte propio no es un fin real** | Si se tratara como terminal, el agente aprendería que detenerse «acaba» el episodio sin costo. | Se marca como `truncated`; el objetivo de Bellman sigue estimando el futuro. La evaluación usa el ambiente sin corte. |
 | **Límite de 1000 cuadros** | Con el zoom saltado quedan ≈ 238 decisiones; para resolver hay que ir rápido. | Se reporta el % de pista recorrida además del retorno. |
 | **Acciones exclusivas** | No se puede acelerar y girar a la vez. | El agente aprende a alternar «acelerar» y «girar»; se analiza la distribución de acciones (sección 6.3). |
