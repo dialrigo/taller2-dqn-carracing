@@ -171,7 +171,7 @@ para paso = 1 … 250 000 decisiones:
 
 **Función de cada componente de DQN:**
 
-- **Memoria de experiencia.** Los cuadros consecutivos de una vuelta están muy correlacionados; entrenar con ellos en orden violaría el supuesto de datos independientes del descenso de gradiente y haría que la red olvidara las curvas vistas hace un minuto. Muestrear al azar de 80 000 transiciones rompe esa correlación y reutiliza cada experiencia unas 2 veces.
+- **Memoria de experiencia.** Los cuadros consecutivos de una vuelta están muy correlacionados; entrenar con ellos en orden violaría el supuesto de datos independientes del descenso de gradiente y haría que la red olvidara las curvas vistas hace un minuto. Muestrear al azar de 80 000 transiciones rompe esa correlación y reutiliza cada experiencia unas 8 veces (32 muestras cada 4 decisiones).
 - **ε-greedy.** Al inicio el agente no sabe que acelerar sobre la pista paga; la exploración aleatoria genera esas primeras experiencias. ε baja de 1 a 0,05 en 100 000 decisiones y se mantiene en 0,05 para seguir corrigiendo errores.
 - **Red objetivo.** Si el objetivo *y* se calculara con la misma red que se actualiza, cada paso de gradiente moverían también el objetivo y el valor Q oscilaría. La copia congelada se actualiza cada 2 500 decisiones (625 pasos de gradiente).
 - **Actualización de Bellman con Double DQN.** Q(s, a) se ajusta hacia r + γ·Q(s′, a*). En Double DQN la red en línea elige a* y la red objetivo lo evalúa, lo que reduce la sobreestimación del operador máximo (van Hasselt et al., 2016).
@@ -223,22 +223,24 @@ Dimensión de salida de cada convolución: ⌊(entrada − kernel)/stride⌋ + 1
 
 ### 5.2 Hiperparámetros (`configs/dqn_carracing.yaml`)
 
-| Hiperparámetro | Valor | Razón |
-|---|---|---|
-| Decisiones de entrenamiento | 250 000 (1 M de cuadros) | Presupuesto que cabe en una jornada de CPU (≈ 4 h) y en el que DQN ya aprende a seguir la pista en este ambiente. |
-| γ | 0,99 | Horizonte efectivo de ≈ 100 decisiones (400 cuadros): suficiente para valorar una curva que llega en 1–2 segundos. |
-| Optimizador, tasa de aprendizaje | Adam, 1 × 10⁻⁴ | Valor estándar para DQN con entrada de píxeles; tasas mayores desestabilizan las convoluciones con objetivos que se mueven. |
-| Tamaño del minilote | 32 | El de Mnih et al. (2015); en CPU cada actualización tarda ≈ 35 ms. |
-| Memoria de experiencia | 80 000 transiciones | ≈ 2,8 GB en uint8 (cuadro nuevo guardado aparte); cubre ≈ 340 episodios de experiencias diversas. |
-| Inicio del aprendizaje | 10 000 decisiones | Llenar la memoria con experiencia aleatoria antes de la primera actualización. |
-| Frecuencia de actualización | cada 4 decisiones | Relación clásica entre recolección y aprendizaje. |
-| Sincronización de la red objetivo | cada 2 500 decisiones | 625 actualizaciones con objetivo fijo: estabilidad sin quedarse con un objetivo muy viejo. |
-| ε inicial → final | 1,0 → 0,05 en 100 000 decisiones | Exploración larga porque la recompensa positiva exige acelerar varias decisiones seguidas sobre la pista. |
-| Pérdida | Huber | Robusta a los saltos de −100 al salir del mapa. |
-| Recorte del gradiente | norma ≤ 10 | Evita actualizaciones explosivas. |
-| Double DQN | activado | Reduce la sobreestimación de Q. |
-| Corte sin progreso | 100 decisiones | Ahorra cómputo en episodios estancados (solo entrenamiento). |
-| Semilla | 42 | Reproducibilidad. |
+| Hiperparámetro | Valor | Mnih et al. (2015) | Razón |
+|---|---|---|---|
+| Decisiones de entrenamiento | 250 000 (1 M de cuadros) | 50 M de cuadros | Presupuesto que cabe en una jornada de CPU (≈ 3,6 h). Es 50 veces menos que en Atari; por eso el agente no llega al umbral de 900 (ver §7). |
+| γ | 0,99 | 0,99 | Horizonte efectivo 1/(1 − γ) ≈ 100 decisiones = 400 cuadros ≈ 8 s de simulación (50 FPS): cubre de sobra la llegada de una curva (1–2 s), de modo que el agente valora frenar o girar antes de salirse. |
+| Optimizador, tasa de aprendizaje | Adam, 1 × 10⁻⁴ | RMSProp, 2,5 × 10⁻⁴ | Adam es el optimizador habitual en implementaciones modernas de DQN (Lapan, 2020); con objetivos que se mueven, una tasa menor evita que las convoluciones oscilen. |
+| Tamaño del minilote | 32 | 32 | Mismo valor del artículo original; en CPU cada actualización tarda ≈ 35 ms. |
+| Memoria de experiencia | 80 000 transiciones | 1 000 000 | Limitada por memoria: cada transición ocupa 35 280 bytes en uint8 (estado 4×84×84 + cuadro nuevo 84×84), es decir ≈ 2,8 GB. Cubre ≈ 340 episodios, suficiente para descorrelacionar los minilotes. |
+| Inicio del aprendizaje | 10 000 decisiones | 50 000 cuadros | Llenar la memoria con experiencia aleatoria antes de la primera actualización, para no entrenar sobre un puñado de transiciones muy parecidas. |
+| Frecuencia de actualización | cada 4 decisiones | cada 4 acciones | Mismo valor del artículo: equilibra recolección y aprendizaje (con minilotes de 32 cada 4 decisiones, cada transición se muestrea en promedio 32/4 = 8 veces mientras está en la memoria). |
+| Sincronización de la red objetivo | cada 2 500 decisiones | cada 10 000 actualizaciones | 625 actualizaciones con objetivo fijo. Es más frecuente que en el artículo porque el entrenamiento es 50 veces más corto: con 10 000 el objetivo cambiaría muy pocas veces. |
+| ε inicial → final | 1,0 → 0,05 en 100 000 decisiones | 1,0 → 0,1 en 1 M de cuadros | Exploración larga (40 % del entrenamiento) porque la recompensa positiva exige acelerar varias decisiones seguidas sobre la pista. El valor final 0,05 es el que el artículo usa al evaluar. |
+| Pérdida | Huber | error recortado a [−1, 1] | Equivale al recorte del error del artículo: cuadrática cerca de 0 y lineal lejos, robusta a los saltos de −100 al salir del mapa. |
+| Recorte del gradiente | norma ≤ 10 | — | Evita actualizaciones explosivas cuando los valores Q crecen. |
+| Double DQN | activado | — (van Hasselt et al., 2016) | La red en línea elige la acción y la red objetivo la evalúa; reduce la sobreestimación de Q. |
+| Corte sin progreso | 100 decisiones | — | Ahorra cómputo en episodios estancados (solo entrenamiento). |
+| Semilla | 42 | — | Reproducibilidad. |
+
+> **Verificación (Rol 2):** la tabla de capas de §5.1 coincide con `scripts/resumen_red.py` (1 686 693 parámetros) y las dimensiones se comprobaron a mano. El detalle está en `docs/validacion_red.md`.
 
 ---
 
