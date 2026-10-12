@@ -28,7 +28,7 @@ Cada rol responde por un criterio de la rúbrica del Taller 2. Marca cada punto 
 - [ ] Cada hiperparámetro de `configs/dqn_carracing.yaml` tiene una justificación en el README (sección 5.2). Si alguna te parece débil, mejórala con una fuente (Mnih et al., 2015; Lapan, 2020; documentación de Gymnasium).
 - [ ] Explica en tus palabras, en el PR, por qué la normalización `/255` está dentro de la red y por qué la salida es lineal.
 
-## Rol 3 · Ambiente (acciones, observaciones, recompensas) — Integrante 3
+## Rol 3 · Ambiente (acciones, observaciones, recompensas) — Lorena Valero
 - [ ] Ejecutar `uv run python scripts/explorar_ambiente.py` y pegar la salida en el PR.
 - [ ] Contrastar la tabla de acciones y el sistema de recompensas del README con la documentación oficial: https://gymnasium.farama.org/environments/box2d/car_racing/
 - [ ] Confirmar tipo, forma y dtype: original `Box(0, 255, (96, 96, 3), uint8)`; procesado `(4, 84, 84) uint8`.
@@ -40,18 +40,18 @@ Cada rol responde por un criterio de la rúbrica del Taller 2. Marca cada punto 
 - [ ] Recorrer `src/carracing_dqn/train.py` y verificar que cada paso del pseudocódigo del README existe en el código (anotar número de línea en el PR).
 - [ ] Revisar la tabla de particularidades (sección 4): ¿falta alguna? (por ejemplo, la penalización de −0,1 por cuadro, o que las baldosas solo pagan la primera vez).
 
-## Rol 5 · Experimentos y reproducibilidad — Integrante 5
+## Rol 5 · Experimentos y reproducibilidad — Jorge Anaya
 - [ ] Clonar el repositorio desde cero, `uv sync`, y correr un entrenamiento corto: `uv run python -m carracing_dqn.train --pasos 3000 --nombre prueba_<tu_nombre>` (≈ 3 min). Pegar la salida en el PR.
 - [ ] Abrir MLflow (`uv run mlflow ui --backend-store-uri sqlite:///mlflow.db`) y adjuntar una captura de la corrida.
 - [ ] Confirmar que la semilla está en la configuración y que el README explica cómo reproducir.
 - [ ] No subir tu carpeta `results/prueba_*` ni `mlflow.db` (están en `.gitignore`; verifícalo con `git status`).
 
-## Rol 6 · Resultados — Integrante 6
+## Rol 6 · Resultados — Andrés Gonzalo Díaz Lázaro
 - [ ] Verificar que **cada cifra** de la sección 6 del README aparece en `results/evaluacion_final.json`, `results/dqn_carracing/evaluaciones.csv` o `results/linea_base_aleatoria.json`. Anotar en el PR la fuente de cada una.
 - [ ] Revisar que las figuras de `docs/figuras/` tengan título, ejes con unidades y leyenda legibles.
 - [ ] Revisar que las conclusiones de la sección 6.4 no afirmen más de lo que muestran los datos (por ejemplo, una sola semilla).
 
-## Rol 7 · Reflexiones y control de calidad — Integrante 7
+## Rol 7 · Reflexiones y control de calidad — Andrés Gonzalo Díaz Lázaro
 - [ ] Recoger la «Bitácora de dificultades» de los *pull requests* de los demás y reescribir la sección 8 del README con esas dificultades reales del grupo.
 - [ ] Revisar la sección 7 (reflexión de resultados): debe interpretar el comportamiento del agente y conectar las limitaciones con el diseño del problema.
 - [ ] Pasar este checklist completo al final y confirmar que los 7 roles tienen su PR integrado.

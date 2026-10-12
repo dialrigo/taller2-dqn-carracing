@@ -4,7 +4,7 @@
 
 <p align="center"><img src="docs/agente_carracing.gif" width="380" alt="Agente DQN conduciendo en CarRacing-v3"></p>
 
-> **Resultado en una línea:** un DQN (Double DQN + red convolucional de Mnih et al., 2015) entrenado desde cero con 1 M de cuadros en CPU conduce en **CarRacing-v3 (acciones discretas)** con un retorno de **665 ± 172 en 50 pistas nuevas** (agente aleatorio: −46), recorre el **77 %** de la pista sin salirse nunca del mapa y supera 700 puntos en el 54 % de las pistas. No alcanza el umbral de 900 porque no completa la vuelta en los 1000 cuadros disponibles; además, el modelo final colapsó (queda inmóvil) y se entrega el mejor punto de control.
+> **Resultado en una línea:** un DQN (Double DQN + red convolucional de Mnih et al., 2015) entrenado desde cero con 1 M de cuadros en CPU conduce en **CarRacing-v3 (acciones discretas)** con un retorno de **665 ± 172 en 50 pistas nuevas** (agente aleatorio: −46), recorre el **77 %** de la pista sin salirse nunca del mapa y supera 700 puntos en el 54 % de las pistas. No alcanza el umbral de 900 porque no completa la vuelta en los 1000 cuadros disponibles; además, el modelo final colapsó (queda inmóvil y, aun forzando el arranque, conduce mucho peor), por lo que se entrega el mejor punto de control.
 
 
 **Integrantes y roles** (detalle en [`GUIA_EQUIPO.md`](GUIA_EQUIPO.md)):
@@ -15,9 +15,9 @@
 | 2 · Red neuronal e hiperparámetros | Nataly Valbuena |
 | 3 · Ambiente: acciones, observaciones y recompensas | Lorena Valero |
 | 4 · Flujo de entrenamiento y particularidades | Nicolas Gamboa |
-| 5 · Experimentos y reproducibilidad | _por asignar_ |
-| 6 · Resultados | _por asignar_ |
-| 7 · Reflexiones y control de calidad | _por asignar_ |
+| 5 · Experimentos y reproducibilidad | Jorge Anaya |
+| 6 · Resultados | Andrés Gonzalo Díaz Lázaro |
+| 7 · Reflexiones y control de calidad | Andrés Gonzalo Díaz Lázaro |
 
 ---
 
@@ -45,6 +45,7 @@ uv sync                                                    # crea el entorno e i
 
 uv run python scripts/explorar_ambiente.py                 # espacios, preprocesamiento y agente aleatorio
 uv run python scripts/resumen_red.py                       # arquitectura de la red con dimensiones reales
+uv run python scripts/diagnostico_colapso.py               # diagnóstico del colapso del modelo final (sección 7)
 uv run python -m carracing_dqn.train                       # entrenamiento completo (usa GPU si existe)
 uv run python -m carracing_dqn.train --pasos 3000 --nombre prueba   # verificación rápida (~3 min)
 uv run python -m carracing_dqn.train --reanudar            # retoma un entrenamiento interrumpido
@@ -72,7 +73,7 @@ Sin instalar nada: [`notebooks/colab_carracing_dqn.ipynb`](notebooks/colab_carra
 │   ├── train.py                   # ciclo de entrenamiento + MLflow + puntos de control
 │   ├── evaluate.py                # evaluación final, visualización de la política y GIF
 │   └── plots.py                   # figuras de resultados
-├── scripts/                       # exploración del ambiente y resumen de la red
+├── scripts/                       # exploración del ambiente, resumen de la red y diagnóstico del colapso
 ├── notebooks/                     # versión para Google Colab
 ├── results/                       # registros por episodio, evaluaciones y métricas finales
 ├── models/                        # modelo entregado (mejor punto de control) y modelo final
@@ -225,7 +226,7 @@ Dimensión de salida de cada convolución: ⌊(entrada − kernel)/stride⌋ + 1
 
 | Hiperparámetro | Valor | Mnih et al. (2015) | Razón |
 |---|---|---|---|
-| Decisiones de entrenamiento | 250 000 (1 M de cuadros) | 50 M de cuadros | Presupuesto que cabe en una jornada de CPU (≈ 3,6 h). Es 50 veces menos que en Atari; por eso el agente no llega al umbral de 900 (ver §7). |
+| Decisiones de entrenamiento | 250 000 (1 M de cuadros) | 50 M de cuadros | Presupuesto que cabe en una jornada de CPU (≈ 3,6 h). Es 50 veces menos que en Atari, una de las razones por las que el agente no llega al umbral de 900 (ver §7). |
 | γ | 0,99 | 0,99 | Horizonte efectivo 1/(1 − γ) ≈ 100 decisiones = 400 cuadros ≈ 8 s de simulación (50 FPS): cubre de sobra la llegada de una curva (1–2 s), de modo que el agente valora frenar o girar antes de salirse. |
 | Optimizador, tasa de aprendizaje | Adam, 1 × 10⁻⁴ | RMSProp, 2,5 × 10⁻⁴ | Adam es el optimizador habitual en implementaciones modernas de DQN (Lapan, 2020); con objetivos que se mueven, una tasa menor evita que las convoluciones oscilen. |
 | Tamaño del minilote | 32 | 32 | Mismo valor del artículo original; en CPU cada actualización tarda ≈ 35 ms. |
@@ -316,33 +317,51 @@ En un episodio completo (pista 1000, retorno 816) el agente acelera en rectas, a
 **Por qué no llega a 900.** El ambiente se resuelve recorriendo toda la pista en menos de 1000 cuadros. Nuestro agente mantiene una velocidad prudente y alterna giros, de modo que completa la vuelta solo en el 4 % de las pistas. Tres decisiones de diseño lo limitan:
 - **Acciones exclusivas:** no puede acelerar y girar a la vez, como sí puede la versión continua. Cada corrección en curva es una decisión sin acelerar.
 - **Saltar el zoom inicial** consume 50 de los 1000 cuadros disponibles.
-- **Presupuesto:** 1 M de cuadros es poco para este ambiente; las implementaciones de referencia suelen entrenar de 2 a 5 M para superar 800–900.
+- **Presupuesto:** 1 M de cuadros es 50 veces menos que los 50 M por juego de Mnih et al. (2015). La curva de §6.1 no muestra que el agente haya agotado lo que puede aprender; muestra que en ese presupuesto no se estabilizó.
 
-**El colapso del modelo final: una falla estructural de DQN en este ambiente.** El modelo final no es peor conduciendo: el problema está en **un único estado**, el inicial. Tras el reinicio, los 4 cuadros apilados son idénticos (auto detenido), y en ese estado los valores Q de las 5 acciones son casi iguales. En el mejor modelo, «acelerar» gana por poco (Q = 49,2 frente a 47,5 de «nada»). En el modelo final ganan los giros (88,0 frente a 86,2 de «acelerar»). Girar con el auto detenido no lo mueve, la imagen siguiente es igual a la anterior y la política greedy queda en un **bucle determinista**: el auto nunca arranca. Basta una diferencia de 2 puntos sobre un valor de 86 para pasar de 665 a −95.
+**El colapso del modelo final: dos fallas superpuestas.** Lo verificamos con `scripts/diagnostico_colapso.py`, que carga los dos modelos entregados.
+
+*1. Una trampa en el estado inicial.* Tras el reinicio, los 4 cuadros apilados son idénticos (auto detenido) y los valores Q de las 5 acciones quedan casi empatados. El mejor modelo elige «acelerar» en las 50 pistas de evaluación, con una ventaja media de solo 1,7 puntos sobre la segunda acción (en la pista 1000: 61,7 frente a 59,5 de «nada»). El modelo final elige girar en las 50 pistas, con una ventaja media de **0,18 puntos** (pista 1000: 93,4 «izquierda» frente a 91,7 «acelerar»). Girar con el auto detenido no lo mueve: la imagen siguiente difiere del cuadro inicial en 0,01 niveles de gris de media (solo las ruedas), la red vuelve a ver el mismo estado y elige lo mismo. La política greedy queda en un **bucle determinista** y el auto nunca arranca: −0,1 por cuadro durante 950 cuadros = −95 en todas las pistas.
+
+*2. Además, el modelo final conduce peor.* Si se fuerzan 5 decisiones de «acelerar» al inicio y luego se deja actuar a la red, en las primeras 20 pistas de evaluación el mejor modelo obtiene **615 ± 202** y el modelo final solo **107 ± 25**. La trampa explica el −95, pero aun sacándolo de ella el modelo final perdió buena parte de lo que había aprendido. Entre las decisiones 200 000 y 250 000 el entrenamiento no solo movió el orden de las acciones en un estado raro: degradó la política en general.
 
 Esto conecta con el diseño del problema:
-- **El estado inicial es raro en la memoria de experiencia:** aparece una vez por episodio frente a ≈ 237 estados en movimiento, así que la red casi no recibe gradiente sobre él y su valor deriva con el resto del entrenamiento.
-- **El corte «sin progreso» oculta el problema durante el entrenamiento:** un episodio atascado se corta a las 100 decisiones y la exploración ε = 0,05 a veces lo saca, de modo que la curva de entrenamiento no muestra el colapso. Solo la **evaluación greedy periódica** lo detectó, dos veces.
-- **Los valores Q siguen creciendo** (de ≈ 50 a ≈ 100 entre las decisiones 150 000 y 250 000) mientras el desempeño se estanca. Esto sugiere que la red sobreestima, incluso con Double DQN, y que pequeñas diferencias de escala alteran el orden de las acciones.
+- **El estado inicial es raro en la memoria de experiencia:** aparece una vez por episodio frente a ≈ 237 estados en movimiento, así que la red casi no recibe gradiente sobre él y su valor deriva con el resto del entrenamiento. Con empates de décimas, cualquier deriva cambia la acción.
+- **El corte «sin progreso» oculta el problema durante el entrenamiento:** un episodio atascado se corta a las 100 decisiones y la exploración ε = 0,05 a veces lo saca, de modo que la curva de entrenamiento no muestra el colapso. Solo la **evaluación greedy periódica** lo detectó, dos veces (decisiones 175 000 y 250 000).
+- **Los valores Q siguen creciendo** (el Q medio de los minilotes pasa de ≈ 20 a ≈ 104 entre las decisiones 150 000 y 250 000) mientras el retorno se estanca. No es por sí solo prueba de sobreestimación: el mejor modelo gana ≈ 2,8 puntos por decisión (665 / 237), y con γ = 0,99 y el límite de tiempo tratado como truncamiento ese ritmo vale ≈ 2,8 / (1 − 0,99) ≈ 280, así que un Q de 104 puede ser el valor que aún se está propagando. Lo que sí importa es la escala relativa: Q crece hasta ≈ 90 en el estado inicial mientras la diferencia entre acciones sigue en décimas, de modo que un error pequeño en el ajuste basta para cambiar la acción elegida. Distinguir sobreestimación de propagación lenta requeriría comparar Q con el retorno descontado observado en cada estado.
+- **La segunda corrida del Rol 5** (misma semilla, otra máquina) eligió su mejor punto de control en la decisión 125 000 y obtuvo 554 ± 210. Que dos corridas difieran tanto y que ambas tengan su mejor modelo antes del final refuerza que la inestabilidad es del método en este presupuesto, no un accidente de una corrida.
 
 **Qué haríamos distinto.**
-1. Seleccionar el modelo con evaluaciones greedy más frecuentes y con más pistas, y descartar puntos de control que se atasquen.
-2. Forzar unas decisiones iniciales de «acelerar» al reiniciar (o arrancar el episodio con el auto en movimiento), para eliminar el estado degenerado.
-3. Usar una tasa de aprendizaje decreciente al final y más cuadros de entrenamiento (2–5 M) en GPU.
-4. Probar *Dueling DQN* (separa el valor del estado de la ventaja de cada acción, útil cuando las acciones valen casi lo mismo) y *Prioritized Experience Replay* para dar más peso a estados raros como el inicial.
-5. Repetir con varias semillas para estimar la variabilidad.
+1. Seleccionar el modelo con evaluaciones greedy más frecuentes y con más pistas, y descartar puntos de control que se atasquen. Fue lo que salvó la entrega.
+2. Arrancar el episodio con el auto en movimiento (unas decisiones fijas de «acelerar» tras el zoom). El diagnóstico muestra que esto elimina el −95, pero **no** recupera el modelo final (107): no sustituye la selección del mejor punto de control.
+3. Usar una tasa de aprendizaje decreciente al final y más cuadros de entrenamiento en GPU.
+4. Probar *Dueling DQN* (separa el valor del estado de la ventaja de cada acción, útil cuando las acciones valen casi lo mismo, como en el estado inicial) y *Prioritized Experience Replay* para dar más peso a estados raros.
+5. Repetir con varias semillas para estimar la variabilidad: la diferencia entre nuestras dos corridas completas (665 frente a 554) muestra que hace falta.
 
 ---
 
 ## 8. Reflexión sobre lo que más costó
 
-> **Sección a cargo del Rol 7.** Reemplazar o complementar con las dificultades reales que cada integrante registra en la «Bitácora de dificultades» de su *pull request*. A continuación, las dificultades que aparecieron al construir y entrenar el agente.
+Esta sección reúne las dificultades que registró cada integrante en la «Bitácora de dificultades» de su *pull request* (#1 a #4 y los de los Roles 6 y 7) y las que aparecieron al construir y entrenar el agente.
 
-1. **El costo de cómputo.** CarRacing simula a ≈ 125 cuadros por segundo en CPU, y cada actualización de la red convolucional tarda ≈ 35 ms. Un millón de cuadros tomó ≈ 3,6 horas, sin margen para buscar hiperparámetros ni repetir semillas. El *frame skip* y una memoria de experiencia que guarda solo el cuadro nuevo (≈ 35 KB por transición en lugar de ≈ 56 KB) fueron necesarios para que cupiera en la máquina.
-2. **Las interrupciones del entorno de ejecución.** El proceso se cortó durante las primeras horas. Hubo que implementar puntos de control cada 5 000 decisiones, con la memoria de experiencia en disco, para poder reanudar sin perder lo aprendido.
-3. **Entender por qué una imagen no basta.** Al principio no era evidente por qué apilar cuadros: una imagen muestra dónde está el auto pero no hacia dónde va. Relacionarlo con la propiedad de Markov vista en clase fue clave para justificar la entrada de 4 canales.
-4. **Distinguir terminación de truncamiento.** El corte por falta de progreso y el límite de 1000 cuadros no son fines reales del episodio. Si se marcan como terminales, el objetivo de Bellman anula el valor futuro y el agente aprende que detenerse no cuesta nada.
-5. **Interpretar curvas que se contradicen.** La pérdida subía mientras el agente mejoraba, y la curva de entrenamiento se veía estable mientras el modelo greedy quedaba inmóvil. Entender por qué exigió mirar el comportamiento del agente (valores Q en el estado inicial, distribución de acciones) y no solo las métricas agregadas.
+**Técnicas**
+
+1. **El costo de cómputo y las interrupciones.** CarRacing simula a ≈ 125 cuadros por segundo en CPU y cada actualización de la red convolucional tarda ≈ 35 ms: un millón de cuadros tomó ≈ 3,6 horas, sin margen para buscar hiperparámetros ni repetir semillas. El proceso se cortó en las primeras horas, así que hubo que implementar puntos de control cada 5 000 decisiones con la memoria de experiencia en disco. El *frame skip* y guardar solo el cuadro nuevo de *s′* (≈ 35 KB por transición en lugar de ≈ 56 KB) fueron necesarios para que la memoria cupiera en la máquina.
+2. **La documentación del ambiente no alcanza.** La página de Gymnasium no detalla la magnitud de las acciones discretas (dirección ±0,6, acelerador 0,2, freno 0,8) ni la regla que da por completa la vuelta al 95 %; hubo que leer `car_racing.py` para confirmarlas (Rol 3). En el mismo proceso, la figura de preprocesamiento parecía correcta y solo al comparar píxeles se vio que el cuadro original y los apilados eran de instantes distintos, por cómo el script interactuaba con el zoom inicial.
+3. **Reproducir no es lo mismo que fijar una semilla.** La corrida corta da cifras idénticas en dos clones, pero la reproducción completa en otro equipo, con la misma semilla, terminó en 554 ± 210 en lugar de 665 ± 172 (Rol 5). Reproducir también exigió resolver incompatibilidades: `box2d-py` no compila con Python 3.14 en Windows, y con PyTorch ≥ 2.6 `torch.load` dejó de abrir los puntos de control y `--reanudar` fallaba hasta pasar `weights_only=False`.
+
+**Conceptuales**
+
+4. **Por qué una imagen no basta.** Una imagen muestra dónde está el auto, no hacia dónde va ni qué tan rápido. Relacionarlo con la propiedad de Markov vista en clase fue lo que justificó la entrada de 4 canales.
+5. **Terminación frente a truncamiento.** El corte por falta de progreso y el límite de 1000 cuadros no son fines reales del episodio. Si se marcan como terminales, el objetivo de Bellman anula el valor futuro y el agente aprende que detenerse no cuesta nada. Es una línea de código (`terminated` frente a `truncated`) con consecuencias en todo el aprendizaje.
+6. **Adaptar los hiperparámetros de Atari.** Con 50 veces menos entrenamiento que Mnih et al. (2015), valores como una memoria de 1 M de transiciones o sincronizar la red objetivo cada 10 000 pasos no aplican, y hubo que justificar cada ajuste en lugar de copiarlo (Rol 2).
+
+**De verificación: lo que más nos costó**
+
+7. **Las cifras «intuitivas» resultaron falsas con frecuencia.** El borrador decía que cada transición se reutilizaba ≈ 2 veces; dos roles (2 y 4) calcularon a mano y son 8. La revisión de resultados (Rol 6) encontró rangos de la curva leídos a ojo que no coincidían con los datos y un porcentaje mal redondeado. Los valores Q del estado inicial citados en el borrador de la sección 7 no coincidían con los que dan los modelos entregados, y la frase «el modelo final no es peor conduciendo» resultó falsa al probarla (107 frente a 615 con arranque forzado).
+8. **Interpretar curvas que se contradicen.** La pérdida subía mientras el agente mejoraba, y la curva de entrenamiento se veía estable mientras el modelo greedy quedaba inmóvil. Entenderlo exigió mirar el comportamiento del agente (valores Q en el estado inicial, distribución de acciones, arranque forzado) y no solo las métricas agregadas. La primera explicación del colapso que construimos era plausible y estaba incompleta; solo un experimento dirigido (`scripts/diagnostico_colapso.py`) mostró que eran dos fallas.
+
+Si hubiera que resumir en una frase: entrenar el agente fue caro, pero lo que más costó fue **no creerle a una explicación o una cifra hasta haberla comprobado contra el código o los datos**.
 
 ---
 
