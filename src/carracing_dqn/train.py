@@ -65,7 +65,8 @@ def entrenar(cfg: dict, nombre: str, reanudar: bool = False):
 
     paso0, log_ep, log_ev, mejor = 1, [], [], -np.inf
     if reanudar and ck_ruta.exists():
-        ck = torch.load(ck_ruta, map_location=agente.dev)
+        # ck = torch.load(ck_ruta, map_location=agente.dev)
+        ck = torch.load(ck_ruta, map_location=agente.dev, weights_only=False)
         agente.q.load_state_dict(ck["red"]); agente.q_obj.load_state_dict(ck["red_objetivo"]); agente.opt.load_state_dict(ck["opt"])
         paso0, mejor = ck["paso"] + 1, ck["mejor"]
         if "memoria" in ck:
