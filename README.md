@@ -423,7 +423,7 @@ En síntesis, entrenar el agente fue costoso, pero lo que más nos costó fue no
 
 ## Uso de IA generativa
 
-El código base y el borrador de este documento se construyeron con apoyo de un asistente de IA (Claude, de Anthropic). Las cifras provienen de la ejecución real del código de este repositorio, y cada integrante verificó contra el código y los datos la parte del trabajo que revisó, como consta en su *pull request*.
+El código base y la sección de revisión realizadas en los commits de pasos 6-7 de este documento se construyeron con apoyo de un asistente de IA (Claude, de Anthropic). Las cifras provienen de la ejecución real del código de este repositorio, y cada integrante verificó contra el código y los datos la parte del trabajo que revisó, como consta en su *pull request*.
 
 ---
 
