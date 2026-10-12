@@ -12,3 +12,7 @@ checkpoints/
 # Sistema operativo
 .DS_Store
 Thumbs.db
+.idea/
+models/prueba_*
+results/prueba_*/
+mlflow.db
