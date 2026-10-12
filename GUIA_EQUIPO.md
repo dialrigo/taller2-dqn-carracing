@@ -12,7 +12,7 @@ Esta guía explica cómo participa cada integrante en el Taller 2. El objetivo e
 | Rol | Responsable | Usuario GitHub | Entregable (su PR) | Tiempo estimado |
 |---|---|---|---|---|
 | 1 · Integración | Diego Ríos | `dialrigo` | Repositorio base, revisión y fusión de PRs, entrega | — |
-| 2 · Red neuronal e hiperparámetros | Nataly Valbuena | _por definir_ | Verificación de la arquitectura y justificación de hiperparámetros (README §5) | 1–2 h |
+| 2 · Red neuronal e hiperparámetros | Nataly Valbuena | `natavalbuenal` | Verificación de la arquitectura y justificación de hiperparámetros (README §5) | 1–2 h |
 | 3 · Ambiente | Lorena Valero | `LorenaValero20` | Exploración del ambiente y validación de acciones, observaciones y recompensas (README §2) | 1–2 h |
 | 4 · Flujo de entrenamiento | Nicolas Gamboa | `JnicolasGh` | **Diagrama propio dibujado a mano** del ciclo DQN y particularidades (README §3–4) | 2 h |
 | 5 · Experimentos | _Integrante 5_ | | Reproducción desde cero, corrida corta y captura de MLflow (README §1) | 1–2 h |
