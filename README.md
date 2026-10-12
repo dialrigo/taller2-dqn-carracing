@@ -266,13 +266,13 @@ Entrenamiento de **250 000 decisiones (1 000 000 de cuadros, 1 186 episodios)** 
 | 250 000 | **−95,0** (atascado) | 1 % |
 
 **Fases del aprendizaje:**
-1. **0–80 000 decisiones (exploración):** el retorno se mantiene entre −40 y 0, como el agente aleatorio. Entre el 60 % y el 80 % de los episodios terminan por el corte «sin progreso»: el auto apenas avanza.
-2. **80 000–130 000 (despegue):** con ε cayendo hacia 0,05, el agente aprende a acelerar sobre la pista y a corregir en las curvas. La media móvil sube de ≈ 0 a ≈ 550 y el corte «sin progreso» baja a menos del 10 %. El mejor episodio de entrenamiento (917,6 puntos) ocurre en la decisión 131 158.
-3. **130 000–250 000 (meseta inestable):** la media móvil oscila entre 350 y 600. Casi todos los episodios acaban por **límite de tiempo**: el agente ya no se sale del mapa, pero no alcanza a completar la vuelta en 1000 cuadros.
+1. **0–80 000 decisiones (exploración):** hasta la decisión ≈ 58 000 la media móvil de 30 episodios se mantiene entre −42 y 0, al nivel del agente aleatorio (−46); después sube despacio hasta ≈ 50. Entre la decisión 10 000 y la 80 000, entre el 61 % y el 81 % de los episodios de cada tramo de 10 000 decisiones terminan por el corte «sin progreso»: el auto apenas avanza.
+2. **80 000–130 000 (despegue):** con ε cayendo hacia 0,05, el agente aprende a acelerar sobre la pista y a corregir en las curvas. La media móvil sube de ≈ 50 a ≈ 580 y la proporción de episodios cortados «sin progreso» baja de ≈ 64 % a ≈ 5 %. El mejor episodio de entrenamiento (917,6 puntos, vuelta completa) ocurre en la decisión 131 158.
+3. **130 000–250 000 (meseta inestable):** la media móvil oscila entre ≈ 310 y ≈ 605. El 93 % de los episodios acaba por **límite de tiempo** y solo el 0,6 % por salir del mapa: el agente ya no se sale, pero no alcanza a completar la vuelta en 1000 cuadros.
 
 ![Fin de episodios y pérdida](docs/figuras/fin_episodios_y_perdida.png)
 
-La pérdida de Huber sube mientras el agente aprende (de ≈ 0,2 a ≈ 2,8). No es una señal de error: los objetivos de Bellman crecen a medida que el agente encuentra recompensas, y el valor Q medio pasa de ≈ 0 a ≈ 100.
+La pérdida de Huber sube mientras el agente aprende (media móvil de ≈ 0,2 al inicio a un máximo de ≈ 2,9 cerca de la decisión 200 000). No es una señal de error: los objetivos de Bellman crecen a medida que el agente encuentra recompensas, y el valor Q medio de los minilotes pasa de ≈ 0 a ≈ 104.
 
 ### 6.2 Evaluación final en 50 pistas nuevas
 
@@ -289,7 +289,8 @@ Semillas 1000–1049, que no se usaron en el entrenamiento ni para elegir el mod
 ![Evaluación final](docs/figuras/evaluacion_final.png)
 
 - **El mejor modelo conduce:** recorre en promedio el **76,6 %** de pistas que nunca vio, nunca se sale del mapa y supera 700 puntos en el 54 % de ellas. Completa la vuelta en 2 de 50 pistas (912,7 puntos el máximo).
-- **El retorno es casi una función lineal del avance:** retorno ≈ 1 002 × (fracción de pista) − 103. El límite no es que el agente se equivoque de camino, sino que **no le alcanza el tiempo**: 48 de 50 episodios terminan por el tope de 1000 cuadros.
+- **La selección del modelo no infló el resultado:** el mejor punto de control se eligió con 5 pistas fijas (655,6) y en 50 pistas nuevas obtiene 665,0, una cifra equivalente.
+- **El retorno es una función casi exactamente lineal del avance:** retorno ≈ 1 002 × (fracción de pista) − 103 (R² = 0,9998 en los 50 episodios). El límite no es que el agente se equivoque de camino, sino que **no le alcanza el tiempo**: 48 de 50 episodios terminan por el tope de 1000 cuadros.
 - **El modelo final colapsó:** con política greedy queda inmóvil en las 50 pistas (−95 = −0,1 por cuadro durante los 950 cuadros del episodio); con ε = 0,05 rinde igual que un agente aleatorio. La sección 7 explica por qué.
 - **No se alcanzó el umbral de «resuelto» (900 de media).** El agente entregado obtiene 665, unos 711 puntos por encima del agente aleatorio.
 
@@ -297,14 +298,14 @@ Semillas 1000–1049, que no se usaron en el entrenamiento ni para elegir el mod
 
 ![Política durante un episodio](docs/figuras/politica_episodio.png)
 
-En un episodio completo (pista 1000, retorno 816) el agente acelera en rectas, alterna giros cortos en las curvas (a la izquierda en la curva cerrada de la decisión 141) y casi nunca frena. En los 50 episodios de evaluación el mejor modelo elige **acelerar en el 62 %** de las decisiones, girar a la izquierda en el 23 %, a la derecha en el 14 %, y «nada» o «frenar» en menos del 2 %. Los valores Q de las 5 acciones están muy cerca entre sí la mayor parte del tiempo y solo se separan en las curvas; las caídas fuertes (decisiones ≈ 200–220) coinciden con tramos en los que el auto se sale del borde de la pista y pierde recompensa.
+En un episodio completo (pista 1000, retorno 816) el agente acelera en rectas, alterna giros cortos en las curvas (a la izquierda en la curva cerrada de la decisión 141) y casi nunca frena. En los 50 episodios de evaluación el mejor modelo elige **acelerar en el 62 %** de las decisiones, girar a la izquierda en el 22 %, a la derecha en el 14 %, y «nada» o «frenar» en menos del 2 %. Los valores Q de las 5 acciones están muy cerca entre sí la mayor parte del tiempo y solo se separan en las curvas; las caídas fuertes (decisiones ≈ 200–220) coinciden con tramos en los que el auto se sale del borde de la pista y pierde recompensa.
 
 ### 6.4 Conclusiones de los resultados
 
 1. Con un DQN implementado desde cero y 1 M de cuadros en CPU, el agente aprende a conducir desde píxeles: de −46 (aleatorio) a **665 ± 172** en pistas nuevas, recorriendo tres cuartas partes de la pista sin salirse.
-2. El desempeño queda por debajo del umbral de 900 por **velocidad**, no por errores de trayectoria.
+2. El desempeño queda por debajo del umbral de 900 **principalmente por velocidad**: ningún episodio greedy termina fuera del mapa y 48 de 50 se agotan por tiempo. Las salidas del borde de la pista que sí ocurren (sección 6.3) cuestan tiempo, pero no terminan el episodio.
 3. El entrenamiento es **inestable**: dos de las diez evaluaciones periódicas (decisiones 175 000 y 250 000) encontraron al agente inmóvil. Guardar el mejor punto de control fue indispensable: el modelo final no sirve.
-4. Estos resultados provienen de **una sola semilla**; no permiten afirmar cuánto varían entre corridas.
+4. **El resultado no es reproducible bit a bit entre máquinas.** La corrida corta (3 000 decisiones) da exactamente las mismas cifras en dos clones con la semilla 42, pero la reproducción completa del Rol 5 en otro equipo (Windows), con la misma configuración y semilla, obtuvo su mejor punto de control en la decisión 125 000 con **554 ± 210** en las 50 pistas de evaluación, frente a 665 ± 172 de la corrida reportada (detalle en el *pull request* #4). Ambas corridas aprenden a conducir y ninguna resuelve el ambiente, pero la diferencia de ≈ 110 puntos muestra que la cifra de 665 es una realización y no un valor esperado; con dos corridas no se puede estimar la variabilidad con rigor.
 
 ---
 

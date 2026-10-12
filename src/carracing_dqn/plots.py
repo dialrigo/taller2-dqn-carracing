@@ -41,12 +41,12 @@ tipos = ["vuelta completa", "límite de tiempo", "sin progreso", "fuera del mapa
 comp = ep.groupby("tramo").fin.value_counts(normalize=True).unstack().reindex(columns=tipos).fillna(0) * 100
 fig, ax = plt.subplots(1, 2, figsize=(14, 4.2))
 ax[0].stackplot(comp.index, comp.T.values, labels=tipos, colors=[VERDE, NAR, GRIS, ROJO], alpha=.85)
-ax[0].set_xlim(comp.index.min(), comp.index.max()); ax[0].set_ylabel("% de episodios del tramo"); ax[0].set_xlabel("Decisiones")
+ax[0].set_xlim(comp.index.min(), comp.index.max()); ax[0].set_ylabel("% de episodios del tramo"); ax[0].set_xlabel("Decisiones (fin de cada tramo de 25 000)")
 ax[0].set_title("Cómo terminan los episodios de entrenamiento"); ax[0].legend(fontsize=8, loc="upper center", bbox_to_anchor=(.5, -.17), ncol=4)
 d = ep.dropna()
 ax[1].plot(d.paso, d.perdida.rolling(30, min_periods=5).mean(), color=AZUL, lw=1.5, label="pérdida de Huber")
 ax2 = ax[1].twinx(); ax2.plot(d.paso, d.q_medio.rolling(30, min_periods=5).mean(), color=NAR, lw=1.5, label="Q(s, a) medio"); ax2.grid(False)
-ax[1].set_xlabel("Decisiones"); ax[1].set_ylabel("Pérdida", color=AZUL); ax2.set_ylabel("Q medio", color=NAR); ax[1].set_title("Pérdida y valor Q medio de los minilotes")
+ax[1].set_xlabel("Decisiones"); ax[1].set_ylabel("Pérdida de Huber (media móvil 30)", color=AZUL); ax2.set_ylabel("Q medio (media móvil 30)", color=NAR); ax[1].set_title("Pérdida y valor Q medio de los minilotes")
 plt.tight_layout(); plt.savefig(F / "fin_episodios_y_perdida.png", dpi=150, bbox_inches="tight"); plt.close()
 
 # 3) Evaluación final (50 pistas nuevas)
@@ -61,8 +61,9 @@ if efp.exists():
     for p, (_, _, c, _) in zip(bp["boxes"], combos):
         p.set_facecolor(c); p.set_alpha(.75)
     ax[0].set_xticks(range(1, 5)); ax[0].set_xticklabels([t.replace(", ", "\n") for *_, t in combos], fontsize=8.5)
-    ax[0].axhline(900, color=VERDE, ls="--", lw=1.2); ax[0].axhline(base["media"], color=ROJO, ls=":", lw=1.2)
-    ax[0].set_ylabel("Retorno"); ax[0].set_title("Evaluación final en 50 pistas nuevas")
+    ax[0].axhline(900, color=VERDE, ls="--", lw=1.2, label="umbral de «resuelto» (900)")
+    ax[0].axhline(base["media"], color=ROJO, ls=":", lw=1.2, label="agente aleatorio (media)")
+    ax[0].set_ylabel("Retorno"); ax[0].set_title("Evaluación final en 50 pistas nuevas"); ax[0].legend(fontsize=8, loc="center right")
     m = ef[(ef.modelo == "mejor") & (ef.epsilon == 0.0)]
     ax[1].scatter(100 * m.avance_pista, m.retorno, color=AZUL, s=24)
     ax[1].set_xlabel("% de la pista recorrida en 1000 cuadros"); ax[1].set_ylabel("Retorno"); ax[1].set_title("Retorno vs. avance (mejor modelo, greedy)")
