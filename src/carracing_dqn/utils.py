@@ -27,10 +27,15 @@ def avance_pista(env) -> float:
 
 
 def tipo_fin(env, terminado: bool, truncado: bool, info: dict) -> str:
+    """Clasifica cómo terminó un episodio.
+    CarRacing informa `info["lap_finished"]` al terminar: True si completó la vuelta (todas las baldosas, o regreso
+    a la salida tras visitar más de `lap_complete_percent` = 95 %) y False si salió del área de juego (−100)."""
     if info.get("cortado_sin_progreso"):
         return "sin progreso"
     if terminado:
-        return "vuelta completa" if avance_pista(env) >= 0.99 else "fuera del mapa"
+        if "lap_finished" in info:
+            return "vuelta completa" if info["lap_finished"] else "fuera del mapa"
+        return "vuelta completa" if avance_pista(env) >= 0.95 else "fuera del mapa"
     return "límite de tiempo"
 
 

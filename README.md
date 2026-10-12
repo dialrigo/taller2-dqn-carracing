@@ -52,16 +52,13 @@ uv run python -m carracing_dqn.train --reanudar            # retoma un entrenami
 uv run python -m carracing_dqn.evaluate                    # evaluación en 50 pistas nuevas + GIF
 uv run python -m carracing_dqn.plots                       # figuras de docs/figuras
 uv run mlflow ui --backend-store-uri sqlite:///mlflow.db   # tablero de experimentos en http://127.0.0.1:5000
-
-
-NOTA:
-Windows: usar Python 3.12 (`uv sync --python 3.12`); con 3.14 `box2d-py` no compila.
-
-Verificado en un clon limpio:
-La corrida corta (`--pasos 3000`) es determinista con la semilla 42 (retorno medio −37,5 / −37,9 / −42,4 a los 1 000 / 2 000 / 3 000 pasos; evaluación greedy −73,9 ± 7,0).
 ```
 
-Sin instalar nada: [`notebooks/colab_carracing_dqn.ipynb`](notebooks/colab_carracing_dqn.ipynb) ejecuta lo mismo en Google Colab con GPU.
+> **Windows:** usar Python 3.12 (`uv sync --python 3.12`); con Python 3.14, `box2d-py` no compila.
+
+**Sin instalar nada:** [![Abrir en Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dialrigo/taller2-dqn-carracing/blob/main/notebooks/colab_carracing_dqn.ipynb) ejecuta lo mismo en Google Colab con GPU ([`notebooks/colab_carracing_dqn.ipynb`](notebooks/colab_carracing_dqn.ipynb)).
+
+**Verificación de la reproducción.** La corrida corta con la semilla 42 (`--pasos 3000`) da las mismas cifras en clones limpios de Windows y Linux: retorno medio −37,5 / −37,9 / −42,4 a las 1 000 / 2 000 / 3 000 decisiones y evaluación greedy −73,9 ± 7,0. El entrenamiento completo, en cambio, no se reproduce bit a bit entre máquinas (sección 6.4).
 
 ```
 ├── configs/dqn_carracing.yaml     # única fuente de hiperparámetros
